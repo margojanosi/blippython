@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 _DATE_FORMATS = ["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%d-%m-%Y"]
 _TIME_FORMATS = ["%H:%M:%S", "%H:%M", "%I:%M %p", "%I:%M%p"]
 
-MINUTES_PER_HOUR = 60.0   # minutes in one hour
 SECONDS_PER_MINUTE = 60.0  # seconds in one minute
+MINUTES_PER_HOUR = 60.0    # minutes in one hour (kept for documentation clarity)
 SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR  # seconds in one hour
 
 

@@ -365,7 +365,10 @@ def _build_raw_data_tab(ws: Worksheet, df: pd.DataFrame) -> None:
         for col_idx, display_col in enumerate(RAW_DATA_COLS, start=1):
             src_col = col_map.get(display_col, display_col)
             val = row.get(src_col, "")
-            # Convert Timestamps to strings for Excel
+            # Convert Timestamps to HH:MM strings for Excel.
+            # NOTE: The MVP assumes all shifts are within a single calendar day
+            # (no midnight-crossing shifts), so showing time-only is safe.
+            # See ASSUMPTIONS.md item 4 – revisit if overnight shifts are added.
             if isinstance(val, pd.Timestamp):
                 val = val.strftime("%H:%M")
             elif pd.isna(val):

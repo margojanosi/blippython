@@ -129,13 +129,13 @@ def test_exceptions_appear_on_report(workbook_path: Path) -> None:
 def test_workbook_generation_with_empty_exceptions(tmp_path: Path) -> None:
     """Workbook should be generated even when no exceptions are found."""
     import pandas as pd
-    from brighthr_time_review.workbook_builder import build_workbook as bw
+    from brighthr_time_review.workbook_builder import build_workbook as build_wb
 
     rules = load_exception_rules(_RULES_PATH)
     df = normalize(load_csv(_SAMPLE_CSV))
     out = tmp_path / "empty_exc.xlsx"
-    bw(df_normalized=df, exceptions=[], rules=rules,
-       input_path=_SAMPLE_CSV, output_path=out)
+    build_wb(df_normalized=df, exceptions=[], rules=rules,
+             input_path=_SAMPLE_CSV, output_path=out)
     assert out.exists()
     wb = load_workbook(out)
     assert "Exception Report" in wb.sheetnames

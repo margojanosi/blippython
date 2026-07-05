@@ -56,10 +56,10 @@ def load_employee_rules(employee_rules_path: Path | None = None) -> list[dict[st
         return []
 
     if not path.exists():
-        logger.warning("Employee rules file not found at %s – proceeding without.", path)
+        logger.warning("Employee rules file not found – proceeding without employee-specific rules.")
         return []
 
-    logger.debug("Loading employee rules from %s", path)
+    logger.debug("Loading employee rules from configured path.")
     with path.open(encoding="utf-8") as fh:
         data = yaml.safe_load(fh)
 

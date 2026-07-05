@@ -115,7 +115,7 @@ def test_review_log_tab_has_run_timestamp(workbook_path: Path) -> None:
     assert any("Run Timestamp" in v for v in all_cell_values)
 
 
-def test_exception_exceptions_appear_on_report(workbook_path: Path) -> None:
+def test_exceptions_appear_on_report(workbook_path: Path) -> None:
     wb = load_workbook(workbook_path)
     ws = wb["Exception Report"]
     exception_types = [

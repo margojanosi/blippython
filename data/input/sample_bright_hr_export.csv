@@ -1,0 +1,14 @@
+Employee Name,Employee ID,Work Date,Clock In,Clock Out,Break Start,Break End,Break Minutes,Location,Notes
+Alice Green,EMP101,2024-06-03,08:00,16:30,12:00,12:30,30,Head Office,Clean record
+Bob White,EMP102,2024-06-03,09:00,,,,0,Head Office,Missing clock-out
+Carol Brown,EMP103,2024-06-03,,17:00,,,0,Head Office,Missing clock-in
+Dave Black,EMP104,2024-06-04,07:00,15:30,,,0,Warehouse,Missing break – shift over 6 hours
+Eve Grey,EMP105,2024-06-04,09:00,17:00,12:00,12:10,10,Head Office,Break too short – only 10 minutes
+Frank Blue,EMP106,2024-06-04,08:00,17:00,12:00,13:30,90,Head Office,Break too long – 90 minutes
+Grace Pink,EMP107,2024-06-05,06:00,22:30,12:00,12:30,30,Head Office,Very long shift – 16.5 hours
+Harry Red,EMP108,2024-06-05,09:00,09:20,,,0,Head Office,Very short shift – 20 minutes
+Iris Orange,EMP109,2024-06-06,08:00,12:00,,,0,Head Office,First duplicate shift entry
+Iris Orange,EMP109,2024-06-06,08:00,12:00,,,0,Head Office,Second duplicate shift entry
+Jack Purple,EMP110,2024-06-06,08:00,13:00,,,0,Head Office,Shift 1 for overlap test
+Jack Purple,EMP110,2024-06-06,12:00,17:00,,,0,Head Office,Shift 2 overlaps Shift 1
+Karen Teal,EMP111,2024-06-08,10:00,14:00,,,0,Head Office,Weekend Saturday shift

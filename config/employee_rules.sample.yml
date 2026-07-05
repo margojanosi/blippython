@@ -1,0 +1,49 @@
+# ============================================================
+# BrightHR Time Review MVP – Employee-Specific Rules (SAMPLE)
+# ============================================================
+# Copy this file to  config/employee_rules.yml  and populate it
+# with real employee IDs / names to enable per-employee overrides.
+#
+# The MVP runs correctly even if this file is not provided or is empty.
+#
+# Fields:
+#   employee_name              – must match the name in the BrightHR export
+#   employee_id                – must match the ID in the BrightHR export
+#   employee_type              – informational (e.g. Full-time, Part-time, Casual)
+#   max_shift_hours_override   – overrides max_shift_hours_default for this employee
+#   min_shift_hours_override   – overrides min_shift_hours_default for this employee
+#   weekend_work_allowed       – true / false overrides weekend_work_allowed_default
+#   break_required_after_hours_override  – overrides break_required_after_hours
+#   min_break_minutes_override           – overrides min_break_minutes
+#   max_break_minutes_override           – overrides max_break_minutes
+#   active                     – set to false to disable this override without deleting it
+# ============================================================
+
+employees:
+
+  - employee_name: "Sample Employee A"
+    employee_id: "EMP001"
+    employee_type: "Full-time"
+    max_shift_hours_override: 10
+    min_shift_hours_override: 4
+    weekend_work_allowed: false
+    break_required_after_hours_override: 5
+    min_break_minutes_override: 20
+    max_break_minutes_override: 60
+    active: true
+
+  - employee_name: "Sample Employee B"
+    employee_id: "EMP002"
+    employee_type: "Casual"
+    # Casual staff may work very short shifts – lower the minimum
+    min_shift_hours_override: 0.5
+    max_shift_hours_override: 8
+    weekend_work_allowed: true   # Authorised for weekend shifts
+    active: true
+
+  - employee_name: "Sample Employee C"
+    employee_id: "EMP003"
+    employee_type: "Part-time"
+    max_shift_hours_override: 8
+    weekend_work_allowed: false
+    active: false   # Inactive – rule not applied

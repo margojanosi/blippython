@@ -1,0 +1,161 @@
+# ============================================================
+# BrightHR Time Review MVP – Exception Rules Configuration
+# ============================================================
+# Adjust any value below to tune exception detection thresholds.
+# Set  enabled: false  to turn off a rule entirely.
+#
+# Severity levels: High | Medium | Low
+# Units examples:  hours | minutes | boolean
+# ============================================================
+
+# ------------------------------------------------------------------
+# Shift length thresholds
+# ------------------------------------------------------------------
+max_shift_hours_default:
+  value: 12
+  unit: hours
+  severity: High
+  enabled: true
+  description: >
+    Flag any shift where the total elapsed time (clock-in to clock-out)
+    exceeds this number of hours.  Likely indicates a forgotten clock-out
+    or an unauthorised long shift.
+
+min_shift_hours_default:
+  value: 1
+  unit: hours
+  severity: Low
+  enabled: true
+  description: >
+    Flag any complete shift (both clock-in and clock-out present) shorter
+    than this number of hours.  May indicate an accidental or test clock-in.
+
+# ------------------------------------------------------------------
+# Break thresholds
+# ------------------------------------------------------------------
+break_required_after_hours:
+  value: 6
+  unit: hours
+  severity: Medium
+  enabled: true
+  description: >
+    Employees working this many hours or more must have a break recorded.
+    If no break is found on a long shift, flag Missing Break.
+
+min_break_minutes:
+  value: 20
+  unit: minutes
+  severity: Low
+  enabled: true
+  description: >
+    Minimum acceptable break duration in minutes.  A recorded break shorter
+    than this threshold will be flagged as Break Too Short.
+
+max_break_minutes:
+  value: 60
+  unit: minutes
+  severity: Low
+  enabled: true
+  description: >
+    Maximum acceptable break duration in minutes.  A recorded break longer
+    than this threshold will be flagged as Break Too Long (possible forgotten
+    clock-back-in).
+
+# ------------------------------------------------------------------
+# Weekend work
+# ------------------------------------------------------------------
+weekend_work_allowed_default:
+  value: false
+  unit: boolean
+  severity: Medium
+  enabled: true
+  description: >
+    If false, any entry on a Saturday or Sunday will be flagged as a
+    Weekend Entry for review.  Override per-employee in employee_rules.yml.
+
+# ------------------------------------------------------------------
+# Rule enable / disable flags
+# These also carry severity so the workbook can colour-code each type.
+# ------------------------------------------------------------------
+duplicate_shift_detection_enabled:
+  value: true
+  unit: boolean
+  severity: High
+  enabled: true
+  description: >
+    Detect records where the same employee has two or more entries with
+    identical work date, clock-in, and clock-out times.
+
+overlap_detection_enabled:
+  value: true
+  unit: boolean
+  severity: High
+  enabled: true
+  description: >
+    Detect records where the same employee has two or more shifts on the
+    same date that overlap in time.
+
+missing_clock_in_enabled:
+  value: true
+  unit: boolean
+  severity: High
+  enabled: true
+  description: >
+    Flag any row where Clock Out is present but Clock In is blank.
+
+missing_clock_out_enabled:
+  value: true
+  unit: boolean
+  severity: High
+  enabled: true
+  description: >
+    Flag any row where Clock In is present but Clock Out is blank.
+
+missing_break_enabled:
+  value: true
+  unit: boolean
+  severity: Medium
+  enabled: true
+  description: >
+    Flag shifts longer than break_required_after_hours with no break recorded.
+
+long_shift_enabled:
+  value: true
+  unit: boolean
+  severity: High
+  enabled: true
+  description: >
+    Flag shifts exceeding max_shift_hours_default.
+
+short_shift_enabled:
+  value: true
+  unit: boolean
+  severity: Low
+  enabled: true
+  description: >
+    Flag complete shifts shorter than min_shift_hours_default.
+
+short_break_enabled:
+  value: true
+  unit: boolean
+  severity: Low
+  enabled: true
+  description: >
+    Flag recorded breaks shorter than min_break_minutes.
+
+long_break_enabled:
+  value: true
+  unit: boolean
+  severity: Low
+  enabled: true
+  description: >
+    Flag recorded breaks longer than max_break_minutes.
+
+weekend_entry_enabled:
+  value: true
+  unit: boolean
+  severity: Medium
+  enabled: true
+  description: >
+    Flag entries on weekends when weekend_work_allowed_default is false
+    (or no employee-specific override allows it).

@@ -36,9 +36,14 @@ jobs:
         id: vars
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            # Pick the first CSV that changed in this push
-            CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
-                      -- 'data/input/' | grep '\.csv$' | head -n 1)
+            # Handle first push (before SHA is all zeros) by falling back to diff-tree
+            if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+              CHANGED=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" \
+                        -- 'data/input/' | grep '\.csv$' | head -n 1)
+            else
+              CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+                        -- 'data/input/' | grep '\.csv$' | head -n 1)
+            fi
             INPUT="${CHANGED:-data/input/sample_bright_hr_export.csv}"
           else
             INPUT="data/input/${{ inputs.input_file }}"

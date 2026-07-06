@@ -28,7 +28,7 @@ The **BrightHR Time Review** GitHub Actions workflow starts automatically the mo
 
 ### Step 3 — Download the workbook
 
-1. Wait about 60 seconds for the workflow to complete (a green ✓ appears).
+1. Wait for the workflow to complete (typically 1–2 minutes; check the **Actions** tab for a green ✓).
 2. Click the completed run, then click **brighthr-time-review-workbook** under *Artifacts*.
 3. A `.zip` file downloads — unzip it to get the `.xlsx` Excel workbook.
 4. Open the workbook and start on the **Exception Report** tab.

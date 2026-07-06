@@ -18,6 +18,7 @@ from brighthr_time_review.logging_config import configure_logging
 from brighthr_time_review.normalizer import normalize
 from brighthr_time_review.rules import detect_all
 from brighthr_time_review.workbook_builder import build_workbook
+from brighthr_time_review.sharepoint_uploader import upload_to_sharepoint
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         help="Logging verbosity (default: INFO)",
+    )
+    parser.add_argument(
+        "--sharepoint",
+        action="store_true",
+        default=False,
+        help=(
+            "Upload the generated workbook to SharePoint via the Microsoft Graph API. "
+            "Requires SHAREPOINT_TENANT_ID, SHAREPOINT_CLIENT_ID, "
+            "SHAREPOINT_CLIENT_SECRET, SHAREPOINT_SITE_ID, SHAREPOINT_DRIVE_ID, "
+            "and SHAREPOINT_FOLDER_PATH environment variables to be set."
+        ),
     )
     return parser.parse_args(argv)
 
@@ -135,6 +147,14 @@ def main(argv: list[str] | None = None) -> int:
             len(exceptions),
         )
         logger.info("=" * 60)
+
+        if args.sharepoint:
+            logger.info("Uploading workbook to SharePoint …")
+            sharepoint_url = upload_to_sharepoint(out_path)
+            logger.info("=" * 60)
+            logger.info("✅  Workbook available on SharePoint: %s", sharepoint_url)
+            logger.info("=" * 60)
+
         return 0
 
     except FileNotFoundError as exc:

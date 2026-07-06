@@ -10,14 +10,15 @@ The tool runs automatically inside GitHub.  No Python, pip, or command line need
 
 ### Production path — SharePoint trigger (recommended)
 
-BrightHR CSV exports stay in a private SharePoint folder.  Power Automate detects new files and triggers the review automatically.
+BrightHR CSV exports stay in a private SharePoint folder.  Power Automate detects new files and triggers the review automatically.  The output workbook is written back to SharePoint — it is never stored as a public GitHub artifact.
 
 1. **Drop the CSV** into the designated SharePoint folder (see `docs/sharepoint_power_automate_setup.md` for one-time setup).
 2. **Wait 1–2 minutes** — Power Automate triggers GitHub Actions automatically.
-3. Go to the **Actions** tab in this repository, click the completed run, and download **brighthr-time-review-workbook** under *Artifacts*.
-4. Unzip the download and open the `.xlsx` workbook — start on the **Exception Report** tab.
+3. The completed workbook appears in the SharePoint folder configured via the `SHAREPOINT_FOLDER_PATH` secret.
+4. Open the `.xlsx` workbook in SharePoint and start on the **Exception Report** tab.
 
-> The CSV never enters the GitHub repository.
+> The CSV never enters the GitHub repository.  
+> The output workbook is uploaded directly to SharePoint and never stored as a downloadable GitHub artifact.
 
 ### Testing path — manual trigger
 
@@ -26,7 +27,7 @@ Useful for verifying the setup with sample data, or if the SharePoint trigger is
 1. Go to the **Actions** tab in this repository.
 2. Click **BrightHR Time Review** in the left-hand list.
 3. Click **Run workflow** and then **Run workflow** again (uses the bundled sample CSV).
-4. Download the artifact as above.
+4. The workbook is uploaded to SharePoint (if the `SHAREPOINT_*` secrets are configured).  For `push`-triggered runs using sample data, the workbook is also available as a temporary artifact under the Actions run for developer convenience.
 
 ---
 
@@ -87,7 +88,7 @@ brighthr_time_review/
 ├── data/
 │   ├── input/
 │   │   └── sample_bright_hr_export.csv
-│   └── output/                      ← generated workbooks land here
+│   └── output/                      ← generated workbooks land here locally
 ├── src/
 │   └── brighthr_time_review/
 │       ├── main.py                  ← CLI entry point
@@ -97,12 +98,14 @@ brighthr_time_review/
 │       ├── rules.py                 ← exception detection
 │       ├── exceptions.py            ← ExceptionRecord model
 │       ├── workbook_builder.py      ← Excel generation
+│       ├── sharepoint_uploader.py   ← Graph API upload to SharePoint
 │       └── logging_config.py
 ├── tests/
 │   ├── test_loader.py
 │   ├── test_normalizer.py
 │   ├── test_rules.py
-│   └── test_workbook_builder.py
+│   ├── test_workbook_builder.py
+│   └── test_sharepoint_uploader.py
 └── docs/
     ├── process_overview.md
     ├── exception_rule_definitions.md

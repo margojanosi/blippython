@@ -1,6 +1,8 @@
 pandas>=2.2
 openpyxl>=3.1
 PyYAML>=6.0
+msal>=1.28
+requests>=2.31
 
 # Development / testing
 pytest>=8.0

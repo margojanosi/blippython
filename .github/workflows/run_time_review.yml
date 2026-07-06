@@ -84,15 +84,26 @@ jobs:
         run: mkdir -p data/output
 
       - name: Run BrightHR Time Review
+        env:
+          SHAREPOINT_TENANT_ID: ${{ secrets.SHAREPOINT_TENANT_ID }}
+          SHAREPOINT_CLIENT_ID: ${{ secrets.SHAREPOINT_CLIENT_ID }}
+          SHAREPOINT_CLIENT_SECRET: ${{ secrets.SHAREPOINT_CLIENT_SECRET }}
+          SHAREPOINT_SITE_ID: ${{ secrets.SHAREPOINT_SITE_ID }}
+          SHAREPOINT_DRIVE_ID: ${{ secrets.SHAREPOINT_DRIVE_ID }}
+          SHAREPOINT_FOLDER_PATH: ${{ secrets.SHAREPOINT_FOLDER_PATH }}
         run: |
           python -m brighthr_time_review.main \
             --input  "$INPUT" \
-            --output data/output/brighthr_time_review_workbook.xlsx
+            --output data/output/brighthr_time_review_workbook.xlsx \
+            --sharepoint
 
-      - name: Upload workbook as artifact
+      # Artifact upload is kept only for the push trigger (sample/dev data).
+      # Production and manual runs upload directly to SharePoint via --sharepoint.
+      - name: Upload workbook as artifact (sample data only)
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: brighthr-time-review-workbook
           path: data/output/brighthr_time_review_workbook.xlsx
-          retention-days: 30
+          retention-days: 7
 

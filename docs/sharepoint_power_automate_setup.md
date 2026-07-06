@@ -85,7 +85,7 @@ Keep this token **private**.  It will be stored as a secure credential inside Po
 | **Method** | POST |
 | **URI** | `https://api.github.com/repos/margojanosi/blippython/dispatches` |
 | **Headers** | `Accept`: `application/vnd.github+json` |
-| | `Authorization`: `****** your PAT here>` |
+| | `Authorization`: `****** (paste the token you created in Step 1) |
 | | `X-GitHub-Api-Version`: `2022-11-28` |
 | | `Content-Type`: `application/json` |
 | **Body** | See below |

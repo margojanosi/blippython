@@ -48,8 +48,19 @@ jobs:
         env:
           CSV_B64: ${{ github.event.client_payload.csv_content }}
         run: |
+          if [ -z "$CSV_B64" ]; then
+            echo "::error::repository_dispatch payload missing csv_content field."
+            exit 1
+          fi
           mkdir -p /tmp/brighthr_input
-          echo "$CSV_B64" | base64 -d > /tmp/brighthr_input/brighthr_export.csv
+          if ! echo "$CSV_B64" | base64 -d > /tmp/brighthr_input/brighthr_export.csv 2>/dev/null; then
+            echo "::error::Failed to decode csv_content — ensure the value is valid base64."
+            exit 1
+          fi
+          if [ ! -s /tmp/brighthr_input/brighthr_export.csv ]; then
+            echo "::error::Decoded CSV is empty — the SharePoint file may be empty or encoding failed."
+            exit 1
+          fi
           echo "INPUT=/tmp/brighthr_input/brighthr_export.csv" >> "$GITHUB_ENV"
 
       # --- Manual / push path: use a file already in data/input/ (sample only) ---

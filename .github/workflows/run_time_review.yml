@@ -1,0 +1,63 @@
+name: BrightHR Time Review
+
+# Trigger 1: manually from the Actions tab (choose which CSV to process)
+# Trigger 2: automatically when a CSV is pushed/uploaded to data/input/
+on:
+  workflow_dispatch:
+    inputs:
+      input_file:
+        description: 'CSV filename inside data/input/ (e.g. my_payroll_export.csv)'
+        required: false
+        default: 'sample_bright_hr_export.csv'
+
+  push:
+    branches: [main]
+    paths:
+      - 'data/input/*.csv'
+
+jobs:
+  generate-workbook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Resolve input CSV path
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Pick the first CSV that changed in this push
+            CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+                      -- 'data/input/' | grep '\.csv$' | head -n 1)
+            INPUT="${CHANGED:-data/input/sample_bright_hr_export.csv}"
+          else
+            INPUT="data/input/${{ inputs.input_file }}"
+          fi
+          echo "input=$INPUT" >> "$GITHUB_OUTPUT"
+          echo "Running review for: $INPUT"
+
+      - name: Create output directory
+        run: mkdir -p data/output
+
+      - name: Run BrightHR Time Review
+        run: |
+          python -m brighthr_time_review.main \
+            --input  "${{ steps.vars.outputs.input }}" \
+            --output data/output/brighthr_time_review_workbook.xlsx
+
+      - name: Upload workbook as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: brighthr-time-review-workbook
+          path: data/output/brighthr_time_review_workbook.xlsx
+          retention-days: 30

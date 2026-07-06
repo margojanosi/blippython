@@ -4,57 +4,34 @@ A Python tool that reads a BrightHR/Blip timesheet CSV export, detects common ti
 
 ---
 
-## Quick Start
+## Quick Start — no software installation required
 
-### 1. Create and activate a virtual environment
+The tool runs automatically inside GitHub.  No Python, pip, or command line needed on your laptop.
 
-```bash
-python -m venv venv
-source venv/bin/activate        # macOS / Linux
-venv\Scripts\activate           # Windows
-```
+### Step 1 — Upload your BrightHR CSV export
 
-### 2. Install requirements
+1. Open this repository on GitHub.
+2. Navigate to **`data/input/`**.
+3. Click **Add file → Upload files**, drag in your BrightHR CSV export, and commit it directly in the browser.
 
-```bash
-pip install -r requirements.txt
-```
+> **Privacy note:** this repository must be **private**.  Never commit real employee data to a public repo.
 
-### 3. Run the sample MVP
+### Step 2 — Run the review (two options)
 
-```bash
-python -m brighthr_time_review.main
-```
+**Option A — automatic (recommended)**  
+The **BrightHR Time Review** GitHub Actions workflow starts automatically the moment you commit a CSV to `data/input/`.  Jump straight to Step 3.
 
-The tool reads `data/input/sample_bright_hr_export.csv` and writes the workbook to:
+**Option B — manual trigger**  
+1. Go to the **Actions** tab in this repository.
+2. Click **BrightHR Time Review** in the left-hand list.
+3. Click **Run workflow**, optionally type your CSV filename (default: `sample_bright_hr_export.csv`), and click **Run workflow** again.
 
-```
-data/output/brighthr_time_review_exception_workbook.xlsx
-```
+### Step 3 — Download the workbook
 
-### 4. Open the generated workbook
-
-Open the file above in Microsoft Excel (or LibreOffice Calc).  
-Start on the **Exception Report** tab to review flagged records.
-
-### 5. Run tests
-
-```bash
-pytest
-```
-
----
-
-## Optional arguments
-
-```bash
-python -m brighthr_time_review.main \
-    --input  path/to/export.csv \
-    --output path/to/review_workbook.xlsx \
-    --rules  path/to/exception_rules.yml \
-    --employee-rules path/to/employee_rules.yml \
-    --log-level DEBUG
-```
+1. Wait about 60 seconds for the workflow to complete (a green ✓ appears).
+2. Click the completed run, then click **brighthr-time-review-workbook** under *Artifacts*.
+3. A `.zip` file downloads — unzip it to get the `.xlsx` Excel workbook.
+4. Open the workbook and start on the **Exception Report** tab.
 
 ---
 
@@ -74,13 +51,11 @@ BrightHR is the authoritative source of truth.**
 
 ## How to Use With Real BrightHR Exports
 
-1. **Export the CSV** from BrightHR / Blip under the Timesheets section.
-2. **Save a copy** of the CSV into `data/input/` (rename it to avoid accidental overwrites).
-3. **Run the tool** with the real file path:
-   ```bash
-   python -m brighthr_time_review.main --input data/input/my_export.csv
-   ```
-4. **Review the workbook** – open the generated `.xlsx` file and work through the Exception Report tab.
+Follow the three-step Quick Start above — upload, trigger, download.  No local software needed.
+
+After downloading the workbook:
+
+4. **Review exceptions** — work through the **Exception Report** tab.
 5. **Correct confirmed issues** in BrightHR manually, following your usual payroll correction process.
 6. **Save the reviewed workbook** as payroll support documentation (update Status and Reviewer Notes columns before saving).
 
@@ -138,6 +113,28 @@ brighthr_time_review/
     ├── exception_rule_definitions.md
     ├── handoff_instructions.md
     └── reviewer_user_guide.md
+```
+
+---
+
+## Local Development (optional)
+
+Only needed if you want to run tests or modify the tool itself.
+
+```bash
+# 1. Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate        # macOS / Linux
+venv\Scripts\activate           # Windows
+
+# 2. Install the package and dev dependencies
+pip install -e .[dev]
+
+# 3. Run the sample CSV against the tool
+python -m brighthr_time_review.main
+
+# 4. Run tests
+pytest
 ```
 
 ---

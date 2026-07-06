@@ -14,7 +14,9 @@ SHAREPOINT_SITE_ID        SharePoint site ID (GUID or hostname:path form accepte
 SHAREPOINT_DRIVE_ID       Document library drive ID (GUID).
 SHAREPOINT_FOLDER_PATH    Destination folder path inside the drive, e.g.
                           "BrightHR Reviews" or "Payroll/Time Reviews".
-                          Use "" or "/" for the drive root.
+                          Optional — defaults to the drive root when unset or
+                          empty.  Does NOT need to be set as a GitHub secret
+                          if uploading to the root of the document library.
 """
 
 import logging

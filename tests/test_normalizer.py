@@ -25,15 +25,17 @@ def _make_raw_df(rows: list[dict]) -> pd.DataFrame:
     """Build a minimal raw DataFrame for normalizer tests."""
     base = {
         "source_row": 1,
-        "employee_name": "Test Employee",
-        "employee_id": "EMP001",
-        "work_date_raw": "2024-06-03",
-        "clock_in_raw": "09:00",
-        "clock_out_raw": "17:00",
-        "break_start_raw": "12:00",
-        "break_end_raw": "12:30",
-        "break_minutes_raw": "30",
-        "location": "Office",
+        "first_name": "Test",
+        "last_name": "Employee",
+        "employee_id": "E001",
+        "clock_in_date_raw": "2024-06-03",
+        "clock_in_time_raw": "09:00",
+        "clock_in_location": "Office",
+        "clock_out_date_raw": "2024-06-03",
+        "clock_out_time_raw": "17:00",
+        "clock_out_location": "Office",
+        "total_duration_raw": "8:30",
+        "total_excl_breaks_raw": "8:00",
         "notes": "",
     }
     records = []
@@ -74,21 +76,21 @@ def test_normalize_calculated_columns_present(full_sample_df: pd.DataFrame) -> N
 
 
 def test_normalize_clean_record_shift_hours() -> None:
-    df = _make_raw_df([{"clock_in_raw": "08:00", "clock_out_raw": "16:00"}])
+    df = _make_raw_df([{"clock_in_time_raw": "08:00", "clock_out_time_raw": "16:00"}])
     result = normalize(df)
     assert result.iloc[0]["calc_shift_hours"] == pytest.approx(8.0)
 
 
 def test_normalize_clean_record_break_minutes() -> None:
-    df = _make_raw_df([{"break_start_raw": "12:00", "break_end_raw": "12:30"}])
+    df = _make_raw_df([{"total_duration_raw": "8:30", "total_excl_breaks_raw": "8:00"}])
     result = normalize(df)
     assert result.iloc[0]["calc_break_minutes"] == pytest.approx(30.0)
 
 
 def test_normalize_paid_hours_deducts_break() -> None:
     df = _make_raw_df(
-        [{"clock_in_raw": "08:00", "clock_out_raw": "16:00",
-          "break_start_raw": "12:00", "break_end_raw": "12:30"}]
+        [{"clock_in_time_raw": "08:00", "clock_out_time_raw": "16:00",
+          "total_duration_raw": "8:30", "total_excl_breaks_raw": "8:00"}]
     )
     result = normalize(df)
     # 8 hours shift - 0.5 hours break = 7.5 paid
@@ -96,20 +98,20 @@ def test_normalize_paid_hours_deducts_break() -> None:
 
 
 def test_normalize_missing_clock_out_flags() -> None:
-    df = _make_raw_df([{"clock_out_raw": ""}])
+    df = _make_raw_df([{"clock_out_date_raw": "", "clock_out_time_raw": ""}])
     result = normalize(df)
     assert not result.iloc[0]["has_clock_out"]
 
 
 def test_normalize_missing_clock_in_flags() -> None:
-    df = _make_raw_df([{"clock_in_raw": ""}])
+    df = _make_raw_df([{"clock_in_time_raw": ""}])
     result = normalize(df)
     assert not result.iloc[0]["has_clock_in"]
 
 
 def test_normalize_weekend_detection() -> None:
     # 2024-06-08 is a Saturday
-    df = _make_raw_df([{"work_date_raw": "2024-06-08"}])
+    df = _make_raw_df([{"clock_in_date_raw": "2024-06-08", "clock_out_date_raw": "2024-06-08"}])
     result = normalize(df)
     assert result.iloc[0]["is_weekend"]
     assert result.iloc[0]["day_of_week"] == "Saturday"
@@ -117,7 +119,7 @@ def test_normalize_weekend_detection() -> None:
 
 def test_normalize_weekday_not_flagged_as_weekend() -> None:
     # 2024-06-03 is a Monday
-    df = _make_raw_df([{"work_date_raw": "2024-06-03"}])
+    df = _make_raw_df([{"clock_in_date_raw": "2024-06-03", "clock_out_date_raw": "2024-06-03"}])
     result = normalize(df)
     assert not result.iloc[0]["is_weekend"]
 
@@ -129,15 +131,13 @@ def test_normalize_no_warnings_for_clean_record() -> None:
 
 
 def test_normalize_bad_date_produces_warning() -> None:
-    df = _make_raw_df([{"work_date_raw": "not-a-date"}])
+    df = _make_raw_df([{"clock_in_date_raw": "not-a-date", "clock_out_date_raw": "not-a-date"}])
     result = normalize(df)
-    assert "Work Date" in result.iloc[0]["normalization_warnings"]
+    assert "Clock In Date" in result.iloc[0]["normalization_warnings"]
 
 
-def test_normalize_break_minutes_from_raw_when_no_times() -> None:
-    """If break times are blank but break_minutes_raw is set, use that."""
-    df = _make_raw_df(
-        [{"break_start_raw": "", "break_end_raw": "", "break_minutes_raw": "45"}]
-    )
+def test_normalize_break_minutes_from_duration_columns() -> None:
+    """Break minutes are derived from Total Duration minus Total Excluding Breaks."""
+    df = _make_raw_df([{"total_duration_raw": "9:00", "total_excl_breaks_raw": "8:15"}])
     result = normalize(df)
     assert result.iloc[0]["calc_break_minutes"] == pytest.approx(45.0)

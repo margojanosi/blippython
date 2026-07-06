@@ -22,7 +22,7 @@ max_shift_hours_default:
     or an unauthorised long shift.
 
 min_shift_hours_default:
-  value: 1
+  value: 2
   unit: hours
   severity: Low
   enabled: true

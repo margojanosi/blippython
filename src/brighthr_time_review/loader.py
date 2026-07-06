@@ -19,21 +19,28 @@ logger = logging.getLogger(__name__)
 # Adjust left-hand keys to match the actual BrightHR export column names.
 # ---------------------------------------------------------------------------
 COLUMN_MAP: dict[str, str] = {
-    # BrightHR export column   → internal column name
-    "Employee Name": "employee_name",
-    "Employee ID": "employee_id",
-    "Work Date": "work_date_raw",
-    "Clock In": "clock_in_raw",
-    "Clock Out": "clock_out_raw",
-    "Break Start": "break_start_raw",
-    "Break End": "break_end_raw",
-    "Break Minutes": "break_minutes_raw",
-    "Location": "location",
+    # BrightHR export column      → internal column name
+    "First Name": "first_name",
+    "Last Name": "last_name",
+    "Job Title": "job_title",
+    "Team(s)": "teams",
+    "Blip Type": "blip_type",
+    "Clock In Date": "clock_in_date_raw",
+    "Clock In Time": "clock_in_time_raw",
+    "Clock In Location": "clock_in_location",
+    "Clock Out Date": "clock_out_date_raw",
+    "Clock Out Time": "clock_out_time_raw",
+    "Clock Out Location": "clock_out_location",
+    "Total Duration": "total_duration_raw",
+    "Total Excluding Breaks": "total_excl_breaks_raw",
     "Notes": "notes",
+    "Payroll Number": "employee_id",
+    "SI Number": "si_number",
+    "Employee Address": "employee_address",
 }
 
 # Columns that MUST be present in the CSV for the tool to function.
-REQUIRED_COLUMNS = {"Employee Name", "Work Date", "Clock In", "Clock Out"}
+REQUIRED_COLUMNS = {"First Name", "Last Name", "Clock In Date"}
 
 
 def load_csv(input_path: Path) -> pd.DataFrame:

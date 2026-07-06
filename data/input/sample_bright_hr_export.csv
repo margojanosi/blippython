@@ -1,14 +1,14 @@
-Employee Name,Employee ID,Work Date,Clock In,Clock Out,Break Start,Break End,Break Minutes,Location,Notes
-Alice Green,EMP101,2024-06-03,08:00,16:30,12:00,12:30,30,Head Office,Clean record
-Bob White,EMP102,2024-06-03,09:00,,,,0,Head Office,Missing clock-out
-Carol Brown,EMP103,2024-06-03,,17:00,,,0,Head Office,Missing clock-in
-Dave Black,EMP104,2024-06-04,07:00,15:30,,,0,Warehouse,Missing break – shift over 6 hours
-Eve Grey,EMP105,2024-06-04,09:00,17:00,12:00,12:10,10,Head Office,Break too short – only 10 minutes
-Frank Blue,EMP106,2024-06-04,08:00,17:00,12:00,13:30,90,Head Office,Break too long – 90 minutes
-Grace Pink,EMP107,2024-06-05,06:00,22:30,12:00,12:30,30,Head Office,Very long shift – 16.5 hours
-Harry Red,EMP108,2024-06-05,09:00,09:20,,,0,Head Office,Very short shift – 20 minutes
-Iris Orange,EMP109,2024-06-06,08:00,12:00,,,0,Head Office,First duplicate shift entry
-Iris Orange,EMP109,2024-06-06,08:00,12:00,,,0,Head Office,Second duplicate shift entry
-Jack Purple,EMP110,2024-06-06,08:00,13:00,,,0,Head Office,Shift 1 for overlap test
-Jack Purple,EMP110,2024-06-06,12:00,17:00,,,0,Head Office,Shift 2 overlaps Shift 1
-Karen Teal,EMP111,2024-06-08,10:00,14:00,,,0,Head Office,Weekend Saturday shift
+First Name,Last Name,Job Title,Team(s),Blip Type,Clock In Date,Clock In Time,Clock In Location,Clock Out Date,Clock Out Time,Clock Out Location,Total Duration,Total Excluding Breaks,Notes,Payroll Number,SI Number,Employee Address
+Alex,Green,Advisor,Support,Clocked,2026-06-30,9:00,HQ,2026-06-30,17:30,HQ,8:30,8:00,Clean record,E100,SI100,1 Demo Street
+Bailey,Stone,Advisor,Support,Clocked,2026-06-30,9:00,HQ,,,,,,Missing clock out,E101,SI101,2 Demo Street
+Casey,Hall,Advisor,Remote,Clocked,2026-06-30,,Remote,2026-06-30,17:00,Remote,,,Missing clock in,E102,SI102,3 Demo Street
+Drew,Lane,Advisor,Support,Clocked,2026-06-30,8:00,HQ,2026-06-30,17:00,HQ,9:00,9:00,Missing break,E103,SI103,4 Demo Street
+Evan,Cole,Advisor,Field,Clocked,2026-06-30,8:00,Site A,2026-06-30,17:00,Site A,9:00,8:50,Short break,E104,SI104,5 Demo Street
+Flynn,Reed,Advisor,Field,Clocked,2026-06-30,8:00,Site B,2026-06-30,18:00,Site B,10:00,8:15,Long break,E105,SI105,6 Demo Street
+Gray,Kim,Supervisor,Support,Clocked,2026-06-30,6:00,HQ,2026-06-30,22:00,HQ,16:00,15:30,Very long shift,E106,SI106,7 Demo Street
+Harper,Lee,Advisor,Support,Clocked,2026-06-30,9:00,HQ,2026-06-30,10:00,HQ,1:00,1:00,Very short shift,E107,SI107,8 Demo Street
+Indy,Ray,Advisor,Support,Clocked,2026-06-30,9:00,HQ,2026-06-30,17:00,HQ,8:00,7:30,Duplicate row 1,E108,SI108,9 Demo Street
+Indy,Ray,Advisor,Support,Clocked,2026-06-30,9:00,HQ,2026-06-30,17:00,HQ,8:00,7:30,Duplicate row 2,E108,SI108,9 Demo Street
+Jules,Park,Advisor,Support,Clocked,2026-06-30,8:00,HQ,2026-06-30,12:00,HQ,4:00,4:00,Overlap row 1,E109,SI109,10 Demo Street
+Jules,Park,Advisor,Support,Clocked,2026-06-30,11:00,HQ,2026-06-30,16:00,HQ,5:00,5:00,Overlap row 2,E109,SI109,10 Demo Street
+Kai,Moss,Advisor,Support,Clocked,2026-07-04,9:00,HQ,2026-07-04,13:00,HQ,4:00,4:00,Weekend shift,E110,SI110,11 Demo Street

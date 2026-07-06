@@ -98,7 +98,9 @@ jobs:
             --sharepoint
 
       # Artifact upload is kept only for the push trigger (sample/dev data).
-      # Production and manual runs upload directly to SharePoint via --sharepoint.
+      # Production and manual runs upload directly to SharePoint via --sharepoint,
+      # so no artifact is needed there.  7-day retention is sufficient for dev
+      # inspection before the sample file is iterated on again.
       - name: Upload workbook as artifact (sample data only)
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4

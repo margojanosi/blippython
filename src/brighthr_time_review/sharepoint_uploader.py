@@ -141,7 +141,12 @@ def upload_to_sharepoint(file_path: Path, filename: str | None = None) -> str:
         ),
     }
 
-    response = requests.put(url, headers=headers, data=file_bytes, timeout=60)
+    try:
+        response = requests.put(url, headers=headers, data=file_bytes, timeout=60)
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError(
+            f"Network error while uploading to SharePoint: {exc}"
+        ) from exc
 
     if response.status_code not in (200, 201):
         raise RuntimeError(

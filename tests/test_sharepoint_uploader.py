@@ -5,10 +5,12 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from brighthr_time_review.sharepoint_uploader import (
     _acquire_token,
     _require_env,
+    _SCOPE,
     upload_to_sharepoint,
 )
 
@@ -53,6 +55,7 @@ def test_acquire_token_returns_token() -> None:
         token = _acquire_token("tenant-id", "client-id", "secret")
 
     assert token == "tok123"
+    mock_app.acquire_token_for_client.assert_called_once_with(scopes=_SCOPE)
 
 
 def test_acquire_token_raises_on_failure() -> None:
@@ -170,6 +173,21 @@ def test_upload_raises_on_http_error(
          patch("brighthr_time_review.sharepoint_uploader.requests.put",
                return_value=mock_response):
         with pytest.raises(RuntimeError, match="HTTP 403"):
+            upload_to_sharepoint(dummy)
+
+
+def test_upload_raises_on_network_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _set_env(monkeypatch)
+    dummy = tmp_path / "workbook.xlsx"
+    dummy.write_bytes(b"PK\x03\x04dummy")
+
+    with patch("brighthr_time_review.sharepoint_uploader._acquire_token",
+               return_value="mock-token"), \
+         patch("brighthr_time_review.sharepoint_uploader.requests.put",
+               side_effect=requests.exceptions.ConnectionError("connection refused")):
+        with pytest.raises(RuntimeError, match="Network error"):
             upload_to_sharepoint(dummy)
 
 

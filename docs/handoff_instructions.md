@@ -6,94 +6,77 @@ This document is for the person taking ownership of this process after the initi
 
 ## What You Are Taking Over
 
-A Python-based tool that:
+A tool that:
 
-1. Reads a BrightHR/Blip timesheet CSV export.
-2. Detects common time-log exceptions automatically.
-3. Produces a formatted Excel workbook for human review.
+1. Detects a new BrightHR/Blip timesheet CSV export in a private SharePoint folder.
+2. Runs it automatically through an exception-detection engine in GitHub's cloud.
+3. Produces a formatted Excel workbook for human review before payroll is processed.
+
+**No software installation is required on your laptop.**  The tool runs entirely in GitHub Actions — a free CI/CD service built into GitHub.
 
 The tool does **not** modify BrightHR, approve payroll, or connect to Dayforce.
 
 ---
 
-## What You Need to Run It
+## What You Need
 
 | Requirement | Details |
 |---|---|
-| Python 3.11 or newer | Install from python.org or via your system package manager |
-| pip | Included with Python |
-| The repository | Clone or download from GitHub |
+| Access to this GitHub repository | Must be **private** — contact the repository owner if you need to be added |
+| Access to the designated SharePoint folder | Where BrightHR CSV exports are dropped; contact your Microsoft 365 admin |
+| Microsoft 365 / Power Automate | Included in most Microsoft 365 business plans |
+
+That's it.  No Python, no pip, no command line.
 
 ---
 
-## First-Time Setup
+## How to Run Each Payroll Period
 
-```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd brighthr-time-review-mvp
+1. **Export the CSV** from BrightHR → Timesheets section.
+2. **Drop it** into the designated SharePoint folder.
+3. Power Automate detects the file automatically and triggers the GitHub Actions workflow.
+4. **Wait 1–2 minutes** — check the GitHub **Actions** tab for a green ✓.
+5. Click the completed run, then click **brighthr-time-review-workbook** under *Artifacts*.
+6. A `.zip` file downloads — unzip it to get the `.xlsx` Excel workbook.
+7. Open the workbook and work through the **Exception Report** tab.
+8. **Correct confirmed issues** in BrightHR manually, following your usual payroll correction process.
+9. **Save the reviewed workbook** as payroll support documentation (update Status and Reviewer Notes columns).
 
-# 2. Create a virtual environment
-python -m venv venv
-source venv/bin/activate   # macOS / Linux
-venv\Scripts\activate      # Windows
-
-# 3. Install dependencies
-pip install -r requirements.txt
-```
-
----
-
-## Running the Tool Each Payroll Period
-
-```bash
-# Place the BrightHR export in data/input/
-# Then run:
-python -m brighthr_time_review.main --input data/input/your_export.csv
-
-# The workbook is generated at:
-# data/output/brighthr_time_review_exception_workbook.xlsx
-```
-
-Open the workbook and work through the Exception Report tab.
+> **Manual trigger (backup):** If the automatic trigger is unavailable, go to GitHub → **Actions** tab → **BrightHR Time Review** → **Run workflow**.  This processes the sample CSV and is useful for testing.
 
 ---
 
 ## Adjusting Exception Thresholds
 
-Edit `config/exception_rules.yml` to change any threshold.  
-No Python knowledge is required – the file is plain text.
+All detection thresholds are in `config/exception_rules.yml` in this repository.  You can edit this file directly in the GitHub web browser — no tools required:
+
+1. Open `config/exception_rules.yml` in the repository.
+2. Click the **pencil (Edit)** icon.
+3. Change the value (e.g. `max_shift_hours_default: value: 12` → `10`).
+4. Click **Commit changes**.
 
 Key settings:
 
 ```yaml
 max_shift_hours_default:
-  value: 12    ← change this number
+  value: 12    ← maximum acceptable shift length in hours
 
 min_break_minutes:
-  value: 20    ← change this number
+  value: 20    ← shortest acceptable break in minutes
 
 weekend_work_allowed_default:
-  value: false   ← change to true if weekend work is normal
+  value: false   ← change to true if weekend work is normal for your team
 ```
+
+To disable a rule entirely, set `enabled: false` for that rule.
 
 ---
 
 ## Adding Employee-Specific Rules
 
-1. Copy `config/employee_rules.sample.yml` to `config/employee_rules.yml`.
-2. Add or edit entries following the sample format.
-3. Run with `--employee-rules config/employee_rules.yml`.
-
----
-
-## Running Tests
-
-```bash
-pytest
-```
-
-All tests should pass before and after any changes.
+1. In the repository, open `config/employee_rules.sample.yml` to see the format.
+2. Create (or ask a developer to create) `config/employee_rules.yml` following the same format.
+3. The workflow will pick it up automatically on the next run.
 
 ---
 
@@ -101,26 +84,28 @@ All tests should pass before and after any changes.
 
 | File | Purpose |
 |---|---|
-| `config/exception_rules.yml` | All detection thresholds – edit here |
+| `config/exception_rules.yml` | All detection thresholds — edit here |
 | `config/employee_rules.sample.yml` | Template for per-employee rules |
-| `data/input/` | Place BrightHR CSV exports here |
-| `data/output/` | Generated workbooks land here |
-| `src/brighthr_time_review/` | Python source code |
-| `docs/` | Documentation |
+| `.github/workflows/run_time_review.yml` | The automated workflow — do not modify unless you know what you are doing |
+| `docs/sharepoint_power_automate_setup.md` | Step-by-step guide for setting up the SharePoint trigger |
+| `docs/reviewer_user_guide.md` | Guide for the person reviewing the output workbook |
+| `src/brighthr_time_review/` | Python source code — only modify if changing logic |
 
 ---
 
 ## Who to Contact
 
-- **For changes to exception rules or thresholds:** edit `config/exception_rules.yml` (no code change needed).
-- **For changes to the Python logic:** consult the original developer or a Python-capable colleague.
-- **For BrightHR export format changes:** update `loader.py::COLUMN_MAP` to match the new column names.
+- **For changes to thresholds:** edit `config/exception_rules.yml` in GitHub (no code change needed).
+- **For SharePoint or Power Automate issues:** see `docs/sharepoint_power_automate_setup.md`; contact your Microsoft 365 admin if needed.
+- **For changes to the detection logic or new rules:** consult the original developer or a Python-capable colleague.
+- **For BrightHR export format changes:** a developer needs to update `loader.py::COLUMN_MAP` to match the new column names.
 
 ---
 
 ## Important Reminders
 
-- Never commit real employee data to source control.
+- The CSV export stays in SharePoint — **never commit real employee data to the GitHub repository**.
 - Save each reviewed workbook as a payroll audit record.
 - All corrections to time records must be made in BrightHR by an authorised person.
-- This tool flags issues for review only – it does not make any changes automatically.
+- This tool flags issues for review only — it does not make any changes automatically.
+

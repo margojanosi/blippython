@@ -1,19 +1,29 @@
 name: BrightHR Time Review
 
-# Trigger 1: manually from the Actions tab (choose which CSV to process)
-# Trigger 2: automatically when a CSV is pushed/uploaded to data/input/
+# Trigger 1: Power Automate sends a repository_dispatch event when a new CSV
+#             appears in the designated SharePoint folder.  The CSV content is
+#             base64-encoded inside the event payload — the file never touches
+#             the repository.
+#
+# Trigger 2: Manually from the Actions tab (useful for running the sample CSV).
+#
+# Trigger 3: Automatically on push — used for development / sample-data testing
+#             only.  Real exports must go through SharePoint (Trigger 1).
 on:
+  repository_dispatch:
+    types: [brighthr-csv-ready]
+
   workflow_dispatch:
     inputs:
       input_file:
-        description: 'CSV filename inside data/input/ (e.g. my_payroll_export.csv)'
+        description: 'CSV filename inside data/input/ — sample data only (e.g. sample_bright_hr_export.csv)'
         required: false
         default: 'sample_bright_hr_export.csv'
 
   push:
     branches: [main]
     paths:
-      - 'data/input/*.csv'
+      - 'data/input/sample_bright_hr_export.csv'
 
 jobs:
   generate-workbook:
@@ -32,11 +42,21 @@ jobs:
       - name: Install dependencies
         run: pip install -e .
 
-      - name: Resolve input CSV path
-        id: vars
+      # --- SharePoint path: CSV arrives as base64 in the dispatch payload ---
+      - name: Decode CSV from SharePoint payload
+        if: github.event_name == 'repository_dispatch'
+        env:
+          CSV_B64: ${{ github.event.client_payload.csv_content }}
+        run: |
+          mkdir -p /tmp/brighthr_input
+          echo "$CSV_B64" | base64 -d > /tmp/brighthr_input/brighthr_export.csv
+          echo "INPUT=/tmp/brighthr_input/brighthr_export.csv" >> "$GITHUB_ENV"
+
+      # --- Manual / push path: use a file already in data/input/ (sample only) ---
+      - name: Resolve sample CSV path
+        if: github.event_name != 'repository_dispatch'
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            # Handle first push (before SHA is all zeros) by falling back to diff-tree
             if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
               CHANGED=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" \
                         -- 'data/input/' | grep '\.csv$' | head -n 1)
@@ -44,12 +64,10 @@ jobs:
               CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
                         -- 'data/input/' | grep '\.csv$' | head -n 1)
             fi
-            INPUT="${CHANGED:-data/input/sample_bright_hr_export.csv}"
+            echo "INPUT=${CHANGED:-data/input/sample_bright_hr_export.csv}" >> "$GITHUB_ENV"
           else
-            INPUT="data/input/${{ inputs.input_file }}"
+            echo "INPUT=data/input/${{ inputs.input_file }}" >> "$GITHUB_ENV"
           fi
-          echo "input=$INPUT" >> "$GITHUB_OUTPUT"
-          echo "Running review for: $INPUT"
 
       - name: Create output directory
         run: mkdir -p data/output
@@ -57,7 +75,7 @@ jobs:
       - name: Run BrightHR Time Review
         run: |
           python -m brighthr_time_review.main \
-            --input  "${{ steps.vars.outputs.input }}" \
+            --input  "$INPUT" \
             --output data/output/brighthr_time_review_workbook.xlsx
 
       - name: Upload workbook as artifact
@@ -66,3 +84,4 @@ jobs:
           name: brighthr-time-review-workbook
           path: data/output/brighthr_time_review_workbook.xlsx
           retention-days: 30
+

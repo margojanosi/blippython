@@ -8,30 +8,25 @@ A Python tool that reads a BrightHR/Blip timesheet CSV export, detects common ti
 
 The tool runs automatically inside GitHub.  No Python, pip, or command line needed on your laptop.
 
-### Step 1 — Upload your BrightHR CSV export
+### Production path — SharePoint trigger (recommended)
 
-1. Open this repository on GitHub.
-2. Navigate to **`data/input/`**.
-3. Click **Add file → Upload files**, drag in your BrightHR CSV export, and commit it directly in the browser.
+BrightHR CSV exports stay in a private SharePoint folder.  Power Automate detects new files and triggers the review automatically.
 
-> **Privacy note:** this repository must be **private**.  Never commit real employee data to a public repo.
+1. **Drop the CSV** into the designated SharePoint folder (see `docs/sharepoint_power_automate_setup.md` for one-time setup).
+2. **Wait 1–2 minutes** — Power Automate triggers GitHub Actions automatically.
+3. Go to the **Actions** tab in this repository, click the completed run, and download **brighthr-time-review-workbook** under *Artifacts*.
+4. Unzip the download and open the `.xlsx` workbook — start on the **Exception Report** tab.
 
-### Step 2 — Run the review (two options)
+> The CSV never enters the GitHub repository.
 
-**Option A — automatic (recommended)**  
-The **BrightHR Time Review** GitHub Actions workflow starts automatically the moment you commit a CSV to `data/input/`.  Jump straight to Step 3.
+### Testing path — manual trigger
 
-**Option B — manual trigger**  
+Useful for verifying the setup with sample data, or if the SharePoint trigger is unavailable.
+
 1. Go to the **Actions** tab in this repository.
 2. Click **BrightHR Time Review** in the left-hand list.
-3. Click **Run workflow**, optionally type your CSV filename (default: `sample_bright_hr_export.csv`), and click **Run workflow** again.
-
-### Step 3 — Download the workbook
-
-1. Wait for the workflow to complete (typically 1–2 minutes; check the **Actions** tab for a green ✓).
-2. Click the completed run, then click **brighthr-time-review-workbook** under *Artifacts*.
-3. A `.zip` file downloads — unzip it to get the `.xlsx` Excel workbook.
-4. Open the workbook and start on the **Exception Report** tab.
+3. Click **Run workflow** and then **Run workflow** again (uses the bundled sample CSV).
+4. Download the artifact as above.
 
 ---
 
@@ -51,7 +46,7 @@ BrightHR is the authoritative source of truth.**
 
 ## How to Use With Real BrightHR Exports
 
-Follow the three-step Quick Start above — upload, trigger, download.  No local software needed.
+Follow the production Quick Start path above — drop in SharePoint, wait, download.
 
 After downloading the workbook:
 
@@ -112,6 +107,7 @@ brighthr_time_review/
     ├── process_overview.md
     ├── exception_rule_definitions.md
     ├── handoff_instructions.md
+    ├── sharepoint_power_automate_setup.md
     └── reviewer_user_guide.md
 ```
 
@@ -143,14 +139,12 @@ pytest
 
 The following improvements are planned for future iterations:
 
-1. **SharePoint folder automation** – automatically pick up new CSV exports from a watched SharePoint folder.
-2. **Power Automate trigger** – trigger a review run when a new file appears in SharePoint.
-3. **Teams notification** – send a Teams message when exceptions are detected, linking to the workbook.
-4. **BrightHR API integration** – read time logs directly via API (if BrightHR approves API access).
-5. **Dayforce import preparation** – generate a Dayforce-compatible correction file after human approval.
-6. **Employee-specific rules** – full per-employee threshold configuration via a managed YAML or database.
-7. **Historical trend reporting** – compare exception counts across payroll periods.
-8. **Manager sign-off workflow** – add an approval column and email notification to line managers.
+1. **Teams notification** – send a Teams message when exceptions are detected, linking to the workbook.
+2. **BrightHR API integration** – read time logs directly via API (if BrightHR approves API access).
+3. **Dayforce import preparation** – generate a Dayforce-compatible correction file after human approval.
+4. **Employee-specific rules** – full per-employee threshold configuration via a managed YAML or database.
+5. **Historical trend reporting** – compare exception counts across payroll periods.
+6. **Manager sign-off workflow** – add an approval column and email notification to line managers.
 
 ---
 

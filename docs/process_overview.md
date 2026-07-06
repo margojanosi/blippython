@@ -15,6 +15,11 @@ It does **not** correct BrightHR records, approve payroll, or integrate with Day
 BrightHR Export (CSV)
         │
         ▼
+ SharePoint Folder          ← drop the file here (private, no repo commit)
+        │
+        ▼  Power Automate detects new file and calls GitHub API
+        │
+        ▼
    [1] CSV Loader
         │   Reads raw data, validates columns
         ▼
@@ -29,14 +34,14 @@ BrightHR Export (CSV)
    [4] Workbook Builder
         │   Generates formatted Excel workbook with 6 tabs
         ▼
-   Excel Workbook (data/output/)
+ GitHub Actions Artifact     ← download from the Actions tab
         │
         ▼
-   Human Reviewer
+ Human Reviewer
         │   Reviews exceptions in Excel
         │   Corrects records in BrightHR manually
         ▼
-   Payroll Processed
+ Payroll Processed
 ```
 
 ---
@@ -58,14 +63,16 @@ BrightHR Export (CSV)
 
 ## Data Flow
 
-1. The user exports a CSV from BrightHR and places it in `data/input/`.
-2. `main.py` calls `load_csv()` to read the file into a raw DataFrame.
-3. `normalize()` enriches the DataFrame with calculated fields.
-4. `detect_all()` runs every enabled rule and collects exceptions.
-5. `build_workbook()` writes the `.xlsx` output to `data/output/`.
-6. The reviewer opens the workbook and works through the Exception Report tab.
-7. Any corrections are applied directly in BrightHR by the appropriate staff member.
-8. The reviewed workbook is saved as payroll documentation.
+1. The payroll team exports a CSV from BrightHR and drops it into the designated SharePoint folder.
+2. Power Automate detects the new file and calls the GitHub Actions workflow via `repository_dispatch`, passing the CSV content (the file never enters the repository).
+3. `main.py` calls `load_csv()` to read the file into a raw DataFrame.
+4. `normalize()` enriches the DataFrame with calculated fields.
+5. `detect_all()` runs every enabled rule and collects exceptions.
+6. `build_workbook()` writes the `.xlsx` output to `data/output/`.
+7. GitHub Actions uploads the workbook as a downloadable artifact.
+8. The reviewer downloads the artifact from the Actions tab and works through the Exception Report tab.
+9. Any corrections are applied directly in BrightHR by the appropriate staff member.
+10. The reviewed workbook is saved as payroll documentation.
 
 ---
 

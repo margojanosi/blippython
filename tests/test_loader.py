@@ -14,9 +14,9 @@ def sample_csv(tmp_path: Path) -> Path:
     """Write a minimal valid CSV and return its path."""
     content = textwrap.dedent(
         """\
-        Employee Name,Employee ID,Work Date,Clock In,Clock Out,Break Start,Break End,Break Minutes,Location,Notes
-        Alice Green,EMP101,2024-06-03,08:00,16:30,12:00,12:30,30,Head Office,Clean record
-        Bob White,EMP102,2024-06-03,09:00,,,,0,Head Office,Missing clock-out
+        First Name,Last Name,Job Title,Team(s),Blip Type,Clock In Date,Clock In Time,Clock In Location,Clock Out Date,Clock Out Time,Clock Out Location,Total Duration,Total Excluding Breaks,Notes,Payroll Number,SI Number,Employee Address
+        Alex,Green,Advisor,Support,Clocked,2026-06-30,9:00,HQ,2026-06-30,17:30,HQ,8:30,8:00,Clean record,E100,SI100,1 Demo Street
+        Bailey,Stone,Advisor,Support,Clocked,2026-06-30,9:00,HQ,,,,,,Missing clock out,E101,SI101,2 Demo Street
         """
     )
     p = tmp_path / "test_export.csv"
@@ -42,10 +42,10 @@ def test_load_csv_source_row_column(sample_csv: Path) -> None:
 
 def test_load_csv_internal_column_names(sample_csv: Path) -> None:
     df = load_csv(sample_csv)
-    assert "employee_name" in df.columns
-    assert "clock_in_raw" in df.columns
-    assert "clock_out_raw" in df.columns
-    assert "work_date_raw" in df.columns
+    assert "first_name" in df.columns
+    assert "clock_in_time_raw" in df.columns
+    assert "clock_out_time_raw" in df.columns
+    assert "clock_in_date_raw" in df.columns
 
 
 def test_load_csv_file_not_found(tmp_path: Path) -> None:
@@ -65,13 +65,13 @@ def test_load_csv_missing_required_column(tmp_path: Path) -> None:
 def test_load_csv_strips_column_whitespace(tmp_path: Path) -> None:
     """Column names with leading/trailing spaces should still be parsed."""
     content = (
-        " Employee Name , Employee ID , Work Date , Clock In , Clock Out \n"
-        "Alice,EMP1,2024-06-03,08:00,16:00\n"
+        " First Name , Last Name , Clock In Date , Clock In Time , Clock Out Date , Clock Out Time \n"
+        "Alex,Green,2026-06-30,9:00,2026-06-30,17:30\n"
     )
     p = tmp_path / "spaced.csv"
     p.write_text(content)
     df = load_csv(p)
-    assert "employee_name" in df.columns
+    assert "first_name" in df.columns
 
 
 def test_load_sample_csv_exists() -> None:

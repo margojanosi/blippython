@@ -74,6 +74,23 @@ def test_load_csv_strips_column_whitespace(tmp_path: Path) -> None:
     assert "first_name" in df.columns
 
 
+def test_load_csv_skips_leading_note_lines(tmp_path: Path) -> None:
+    """CSV files with a leading 'Note:' line should still be parsed correctly."""
+    content = textwrap.dedent(
+        """\
+        Note: Durations of shifts that overlap two days will be displayed within the start date of the shift
+        First Name,Last Name,Job Title,Team(s),Blip Type,Clock In Date,Clock In Time,Clock In Location,Clock Out Date,Clock Out Time,Clock Out Location,Total Duration,Total Excluding Breaks,Notes,Payroll Number,SI Number,Employee Address
+        Alex,Green,Advisor,Support,Clocked,2026-06-30,9:00,HQ,2026-06-30,17:30,HQ,8:30,8:00,,E100,SI100,1 Demo Street
+        """
+    )
+    p = tmp_path / "note_header.csv"
+    p.write_text(content)
+    df = load_csv(p)
+    assert len(df) == 1
+    assert "first_name" in df.columns
+    assert df.iloc[0]["first_name"] == "Alex"
+
+
 def test_load_sample_csv_exists() -> None:
     """The bundled sample CSV must exist and be loadable."""
     sample = (

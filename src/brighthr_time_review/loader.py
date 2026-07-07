@@ -66,7 +66,20 @@ def load_csv(input_path: Path) -> pd.DataFrame:
         raise FileNotFoundError(f"Input CSV not found: {path}")
 
     logger.info("Loading CSV from %s", path)
-    df = pd.read_csv(path, dtype=str, keep_default_na=False)
+
+    # BrightHR sometimes prepends note lines (e.g. "Note: Durations of
+    # shifts that overlap two days ...") before the header row.  Count
+    # how many leading lines to skip so that pd.read_csv starts at the
+    # real header.
+    skiprows = 0
+    with path.open(encoding="utf-8-sig") as fh:
+        for line in fh:
+            if line.strip().startswith("Note:"):
+                skiprows += 1
+            else:
+                break
+
+    df = pd.read_csv(path, dtype=str, keep_default_na=False, skiprows=skiprows)
 
     # Trim leading/trailing whitespace from column names
     df.columns = [c.strip() for c in df.columns]

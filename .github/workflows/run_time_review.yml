@@ -5,20 +5,39 @@ name: BrightHR Time Review
 #             base64-encoded inside the event payload — the file never touches
 #             the repository.
 #
-# Trigger 2: Manually from the Actions tab (useful for running the sample CSV).
+# Trigger 2: Manually from the Actions tab — supports both the CSV path
+#             (paste a filename from data/input/) and the BrightHR API path
+#             (supply date-from / date-to to pull data directly).
 #
 # Trigger 3: Automatically on push — used for development / sample-data testing
-#             only.  Real exports must go through SharePoint (Trigger 1).
+#             only.  Real exports must go through SharePoint (Trigger 1) or the
+#             API path (Trigger 2 with source=api).
 on:
   repository_dispatch:
     types: [brighthr-csv-ready]
 
   workflow_dispatch:
     inputs:
+      source:
+        description: 'Data source: "csv" (default) uses a file in data/input/; "api" fetches directly from BrightHR'
+        required: false
+        default: 'csv'
+        type: choice
+        options:
+          - csv
+          - api
       input_file:
-        description: 'CSV filename inside data/input/ — sample data only (e.g. sample_bright_hr_export.csv)'
+        description: '[csv only] CSV filename inside data/input/ (e.g. sample_bright_hr_export.csv)'
         required: false
         default: 'sample_bright_hr_export.csv'
+      date_from:
+        description: '[api only] Start date YYYY-MM-DD (inclusive)'
+        required: false
+        default: ''
+      date_to:
+        description: '[api only] End date YYYY-MM-DD (inclusive)'
+        required: false
+        default: ''
 
   push:
     branches: [main]
@@ -61,29 +80,49 @@ jobs:
             echo "::error::Decoded CSV is empty — the SharePoint file may be empty or encoding failed."
             exit 1
           fi
+          echo "RUN_SOURCE=csv" >> "$GITHUB_ENV"
           echo "INPUT=/tmp/brighthr_input/brighthr_export.csv" >> "$GITHUB_ENV"
 
-      # --- Manual / push path: use a file already in data/input/ (sample only) ---
-      - name: Resolve sample CSV path
+      # --- Manual / push path: resolve CSV file or API date range ---
+      - name: Resolve input for manual / push trigger
         if: github.event_name != 'repository_dispatch'
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-              CHANGED=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" \
-                        -- 'data/input/' | grep '\.csv$' | head -n 1)
-            else
-              CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
-                        -- 'data/input/' | grep '\.csv$' | head -n 1)
+          SOURCE="${{ inputs.source }}"
+          SOURCE="${SOURCE:-csv}"   # default for push trigger
+
+          if [ "$SOURCE" = "api" ]; then
+            DATE_FROM="${{ inputs.date_from }}"
+            DATE_TO="${{ inputs.date_to }}"
+            if [ -z "$DATE_FROM" ] || [ -z "$DATE_TO" ]; then
+              echo "::error::date_from and date_to are required when source=api."
+              exit 1
             fi
-            echo "INPUT=${CHANGED:-data/input/sample_bright_hr_export.csv}" >> "$GITHUB_ENV"
+            echo "RUN_SOURCE=api" >> "$GITHUB_ENV"
+            echo "DATE_FROM=$DATE_FROM" >> "$GITHUB_ENV"
+            echo "DATE_TO=$DATE_TO" >> "$GITHUB_ENV"
           else
-            echo "INPUT=data/input/${{ inputs.input_file }}" >> "$GITHUB_ENV"
+            # CSV path
+            if [ "${{ github.event_name }}" = "push" ]; then
+              if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+                CHANGED=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" \
+                          -- 'data/input/' | grep '\.csv$' | head -n 1)
+              else
+                CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+                          -- 'data/input/' | grep '\.csv$' | head -n 1)
+              fi
+              echo "INPUT=${CHANGED:-data/input/sample_bright_hr_export.csv}" >> "$GITHUB_ENV"
+            else
+              echo "INPUT=data/input/${{ inputs.input_file }}" >> "$GITHUB_ENV"
+            fi
+            echo "RUN_SOURCE=csv" >> "$GITHUB_ENV"
           fi
 
       - name: Create output directory
         run: mkdir -p data/output
 
-      - name: Run BrightHR Time Review
+      # --- CSV run (SharePoint dispatch or manual/push CSV path) ---
+      - name: Run BrightHR Time Review (CSV)
+        if: env.RUN_SOURCE == 'csv'
         env:
           SHAREPOINT_TENANT_ID: ${{ secrets.SHAREPOINT_TENANT_ID }}
           SHAREPOINT_CLIENT_ID: ${{ secrets.SHAREPOINT_CLIENT_ID }}
@@ -93,7 +132,29 @@ jobs:
           SHAREPOINT_FOLDER_PATH: ${{ secrets.SHAREPOINT_FOLDER_PATH }}
         run: |
           python -m brighthr_time_review.main \
+            --source csv \
             --input  "$INPUT" \
+            --output data/output/brighthr_time_review_workbook.xlsx \
+            --sharepoint
+
+      # --- API run (manual workflow_dispatch with source=api) ---
+      - name: Run BrightHR Time Review (API)
+        if: env.RUN_SOURCE == 'api'
+        env:
+          BRIGHTHR_CLIENT_ID: ${{ secrets.BRIGHTHR_CLIENT_ID }}
+          BRIGHTHR_CLIENT_SECRET: ${{ secrets.BRIGHTHR_CLIENT_SECRET }}
+          BRIGHTHR_BASE_URL: ${{ secrets.BRIGHTHR_BASE_URL }}
+          SHAREPOINT_TENANT_ID: ${{ secrets.SHAREPOINT_TENANT_ID }}
+          SHAREPOINT_CLIENT_ID: ${{ secrets.SHAREPOINT_CLIENT_ID }}
+          SHAREPOINT_CLIENT_SECRET: ${{ secrets.SHAREPOINT_CLIENT_SECRET }}
+          SHAREPOINT_SITE_ID: ${{ secrets.SHAREPOINT_SITE_ID }}
+          SHAREPOINT_DRIVE_ID: ${{ secrets.SHAREPOINT_DRIVE_ID }}
+          SHAREPOINT_FOLDER_PATH: ${{ secrets.SHAREPOINT_FOLDER_PATH }}
+        run: |
+          python -m brighthr_time_review.main \
+            --source api \
+            --date-from "$DATE_FROM" \
+            --date-to   "$DATE_TO" \
             --output data/output/brighthr_time_review_workbook.xlsx \
             --sharepoint
 

@@ -11,6 +11,8 @@ It does **not** correct BrightHR records, approve payroll, or integrate with Day
 
 ## High-Level Process
 
+### CSV path (existing)
+
 ```
 BrightHR Export (CSV)
         │
@@ -44,6 +46,23 @@ BrightHR Export (CSV)
  Payroll Processed
 ```
 
+### API path (alternative)
+
+```
+BrightHR API  ← no manual export needed
+        │
+        ▼  GitHub Actions calls BrightHR Customer API
+        │  (OAuth2 client-credentials flow)
+        │  with dateFrom / dateTo query parameters
+        ▼
+   [1] API Client          (brighthr_api_client.py)
+        │   Authenticates, paginates, returns same
+        │   internal DataFrame as the CSV loader
+        ▼
+   [2..4] Same normalizer, rules engine and workbook
+          builder as the CSV path
+```
+
 ---
 
 ## Module Responsibilities
@@ -51,6 +70,7 @@ BrightHR Export (CSV)
 | Module | Responsibility |
 |---|---|
 | `loader.py` | Read and validate the CSV; rename columns to internal names |
+| `brighthr_api_client.py` | Authenticate with the BrightHR API and fetch Blip attendance records; returns same DataFrame schema as `loader.py` |
 | `normalizer.py` | Parse raw strings into typed values; calculate derived fields |
 | `rules.py` | Apply each exception detection rule; return ExceptionRecord list |
 | `exceptions.py` | ExceptionRecord data model |
@@ -63,6 +83,8 @@ BrightHR Export (CSV)
 
 ## Data Flow
 
+### CSV path
+
 1. The payroll team exports a CSV from BrightHR and drops it into the designated SharePoint folder.
 2. Power Automate detects the new file and calls the GitHub Actions workflow via `repository_dispatch`, passing the CSV content (the file never enters the repository).
 3. `main.py` calls `load_csv()` to read the file into a raw DataFrame.
@@ -73,6 +95,12 @@ BrightHR Export (CSV)
 8. The reviewer downloads the artifact from the Actions tab and works through the Exception Report tab.
 9. Any corrections are applied directly in BrightHR by the appropriate staff member.
 10. The reviewed workbook is saved as payroll documentation.
+
+### API path
+
+1. A team member triggers the GitHub Actions workflow manually from the **Actions** tab, selecting **source = api** and entering a date range.
+2. `main.py` calls `load_from_api()`, which authenticates with the BrightHR Customer API (OAuth2 client-credentials) and fetches Blip attendance records for the requested dates.
+3. Steps 4–10 are identical to the CSV path above.
 
 ---
 

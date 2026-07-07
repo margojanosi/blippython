@@ -26,11 +26,15 @@ The tool does **not** modify BrightHR, approve payroll, or connect to Dayforce.
 | Access to the designated SharePoint folder | Where BrightHR CSV exports are dropped; contact your Microsoft 365 admin |
 | Microsoft 365 / Power Automate | Included in most Microsoft 365 business plans |
 
-That's it.  No Python, no pip, no command line.
+That's it for the **CSV path**.  The **API path** requires two additional GitHub Secrets (see [Using the BrightHR API Path](#using-the-brighthr-api-path) below).
+
+No Python, no pip, no command line.
 
 ---
 
 ## How to Run Each Payroll Period
+
+### Option A – CSV path (original, via SharePoint)
 
 1. **Export the CSV** from BrightHR → Timesheets section.
 2. **Drop it** into the designated SharePoint folder.
@@ -42,7 +46,34 @@ That's it.  No Python, no pip, no command line.
 8. **Correct confirmed issues** in BrightHR manually, following your usual payroll correction process.
 9. **Save the reviewed workbook** as payroll support documentation (update Status and Reviewer Notes columns).
 
-> **Manual trigger (backup):** If the automatic trigger is unavailable, go to GitHub → **Actions** tab → **BrightHR Time Review** → **Run workflow**.  This processes the sample CSV and is useful for testing.
+> **Manual trigger (backup):** If the automatic trigger is unavailable, go to GitHub → **Actions** tab → **BrightHR Time Review** → **Run workflow** → leave **source** as `csv`.
+
+---
+
+### Option B – BrightHR API path (no CSV export needed)
+
+This path fetches attendance data directly from BrightHR without requiring a manual CSV export.
+
+**One-time setup** (done by a developer):
+
+1. Register an OAuth2 application in the [BrightHR Developer Portal](https://developer.bright.hr/) to obtain a `Client ID` and `Client Secret`.
+2. In the GitHub repository go to **Settings → Secrets and variables → Actions** and add:
+
+| Secret name | Value |
+|---|---|
+| `BRIGHTHR_CLIENT_ID` | Client ID from the developer portal |
+| `BRIGHTHR_CLIENT_SECRET` | Client secret from the developer portal |
+| `BRIGHTHR_BASE_URL` | *(optional)* API base URL if not `https://api.brighthr.com` |
+
+**Running it:**
+
+1. Go to GitHub → **Actions** tab → **BrightHR Time Review** → **Run workflow**.
+2. Set **source** to `api`.
+3. Enter **date_from** and **date_to** (format: `YYYY-MM-DD`, e.g. `2026-06-01` / `2026-06-30`).
+4. Click **Run workflow**.
+5. When the run completes the workbook is uploaded to SharePoint (same as the CSV path).
+
+> **Note:** The API path requires the `BRIGHTHR_CLIENT_ID` and `BRIGHTHR_CLIENT_SECRET` secrets to be configured. If they are not set, the run will fail with a clear error message.
 
 ---
 
@@ -90,6 +121,7 @@ To disable a rule entirely, set `enabled: false` for that rule.
 | `docs/sharepoint_power_automate_setup.md` | Step-by-step guide for setting up the SharePoint trigger |
 | `docs/reviewer_user_guide.md` | Guide for the person reviewing the output workbook |
 | `src/brighthr_time_review/` | Python source code — only modify if changing logic |
+| `src/brighthr_time_review/brighthr_api_client.py` | BrightHR API client — update `API_FIELD_MAP` if API field names change |
 
 ---
 
@@ -98,7 +130,8 @@ To disable a rule entirely, set `enabled: false` for that rule.
 - **For changes to thresholds:** edit `config/exception_rules.yml` in GitHub (no code change needed).
 - **For SharePoint or Power Automate issues:** see `docs/sharepoint_power_automate_setup.md`; contact your Microsoft 365 admin if needed.
 - **For changes to the detection logic or new rules:** consult the original developer or a Python-capable colleague.
-- **For BrightHR export format changes:** a developer needs to update `loader.py::COLUMN_MAP` to match the new column names.
+- **For BrightHR CSV export format changes:** a developer needs to update `loader.py::COLUMN_MAP` to match the new column names.
+- **For BrightHR API field name changes:** a developer needs to update `brighthr_api_client.py::API_FIELD_MAP`.
 
 ---
 

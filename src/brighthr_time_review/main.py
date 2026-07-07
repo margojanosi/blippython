@@ -5,13 +5,16 @@ Usage:
     python -m brighthr_time_review.main --input path/to/file.csv --output path/to/output.xlsx
     python -m brighthr_time_review.main --rules path/to/exception_rules.yml
     python -m brighthr_time_review.main --employee-rules path/to/employee_rules.yml
+    python -m brighthr_time_review.main --source api --date-from 2026-06-01 --date-to 2026-06-30
 """
 
 import argparse
 import logging
 import sys
+from datetime import date
 from pathlib import Path
 
+from brighthr_time_review.brighthr_api_client import load_from_api
 from brighthr_time_review.config import load_employee_rules, load_exception_rules
 from brighthr_time_review.loader import load_csv
 from brighthr_time_review.logging_config import configure_logging
@@ -36,17 +39,49 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="brighthr-time-review",
         description=(
-            "BrightHR Time Review MVP – analyses a BrightHR/Blip timesheet CSV "
+            "BrightHR Time Review MVP – analyses a BrightHR/Blip timesheet "
             "and generates an Excel exception review workbook."
         ),
     )
+
+    # ---- Data source ----
+    parser.add_argument(
+        "--source",
+        choices=["csv", "api"],
+        default="csv",
+        help=(
+            "Data source: 'csv' reads a local export file (default); "
+            "'api' fetches attendance data directly from the BrightHR API "
+            "(requires BRIGHTHR_CLIENT_ID and BRIGHTHR_CLIENT_SECRET env vars)."
+        ),
+    )
+
+    # ---- CSV-path options ----
     parser.add_argument(
         "--input",
         type=Path,
         default=_DEFAULT_INPUT,
         metavar="CSV_PATH",
-        help=f"Path to the BrightHR export CSV (default: {_DEFAULT_INPUT})",
+        help=f"Path to the BrightHR export CSV (default: {_DEFAULT_INPUT}). Used only with --source csv.",
     )
+
+    # ---- API-path options ----
+    parser.add_argument(
+        "--date-from",
+        type=date.fromisoformat,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Start date for the BrightHR API fetch (inclusive). Required with --source api.",
+    )
+    parser.add_argument(
+        "--date-to",
+        type=date.fromisoformat,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="End date for the BrightHR API fetch (inclusive). Required with --source api.",
+    )
+
+    # ---- Common options ----
     parser.add_argument(
         "--output",
         type=Path,
@@ -109,9 +144,24 @@ def main(argv: list[str] | None = None) -> int:
         rules = load_exception_rules(args.rules)
         employee_rules = load_employee_rules(args.employee_rules)
 
-        # 2. Load CSV
-        logger.info("Loading input CSV from %s", args.input)
-        raw_df = load_csv(args.input)
+        # 2. Load data — CSV path or API path
+        if args.source == "api":
+            if args.date_from is None or args.date_to is None:
+                logger.error(
+                    "--date-from and --date-to are required when using --source api."
+                )
+                return 1
+            logger.info(
+                "Loading data from BrightHR API (%s → %s) …",
+                args.date_from.isoformat(),
+                args.date_to.isoformat(),
+            )
+            raw_df = load_from_api(args.date_from, args.date_to)
+            input_label = f"BrightHR API {args.date_from} → {args.date_to}"
+        else:
+            logger.info("Loading input CSV from %s", args.input)
+            raw_df = load_csv(args.input)
+            input_label = args.input
 
         # 3. Normalise
         logger.info("Normalising data …")
@@ -134,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
             df_normalized=norm_df,
             exceptions=exceptions,
             rules=rules,
-            input_path=args.input,
+            input_path=input_label,
             output_path=args.output,
             warnings=warnings,
         )

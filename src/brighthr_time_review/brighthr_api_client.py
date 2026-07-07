@@ -152,7 +152,7 @@ def _fetch_blip_records(
     ``next`` link the function follows it until all pages are retrieved.
 
     Args:
-        token:     ****** token string.
+        token:     OAuth2 access token string.
         date_from: Start date (inclusive).
         date_to:   End date (inclusive).
         base_url:  API base URL.

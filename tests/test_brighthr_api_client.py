@@ -306,7 +306,7 @@ def test_load_from_api_uses_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     call_args = mock_token.call_args
     assert call_args[0][0] == "env-id"
     assert call_args[0][1] == "env-secret"
-    assert "api.example.com" in call_args[0][2]
+    assert call_args[0][2] == "https://api.example.com/oauth/token"
 
 
 def test_load_from_api_custom_token_url() -> None:

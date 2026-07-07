@@ -249,7 +249,7 @@ def _records_to_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
         row: dict[str, Any] = {"source_row": idx}
         for api_field, internal_name in API_FIELD_MAP.items():
             raw = rec.get(api_field, "")
-            # Normalise lists (e.g. teams) to a comma-separated string
+            # Normalise lists (e.g. teams) to a comma-and-space-separated string
             if isinstance(raw, list):
                 raw = ", ".join(str(v) for v in raw)
             row[internal_name] = str(raw) if raw is not None else ""
